@@ -83,9 +83,6 @@
 #define D_DEBUG "Debug"
 #define D_DEWPOINT "Dew point"
 #define D_DISABLED "Disabled"
-#define D_MOVING_DISTANCE "Moving Distance"
-#define D_STATIC_DISTANCE "Static Distance"
-#define D_DETECT_DISTANCE "Detect Distance"
 #define D_DISTANCE "Distance"
 #define D_DNS_SERVER "DNS Server"
 #define D_DO "Disolved Oxygen"
@@ -240,6 +237,8 @@
 #define D_MQTT_SERVICE_FOUND "MQTT service found on"
 #define D_FOUND_AT "found at"
 #define D_SYSLOG_HOST_NOT_FOUND "Syslog Host not found"
+#define D_RTC_GET "Time read from"
+#define D_RTC_SET "Time set to"
 
 // settings.ino
 #define D_SAVED_TO_FLASH_AT "Saved to flash at"
@@ -514,11 +513,6 @@
 #define D_ZIGBEE_EEPROM_FOUND_AT_ADDRESS "ZBBridge EEPROM found at address"
 #define D_ZIGBEE_RANDOMIZING_ZBCONFIG "Randomizing Zigbee parameters, please check with 'ZbConfig'"
 
-// xdrv_89_dali.ino
-#define D_SENSOR_DALI_RX                  "Dali RX"
-#define D_SENSOR_DALI_TX                  "Dali TX"
-#define D_CONFIGURE_DALI                  "Config DALI"
-
 // xdrv_03_energy.ino
 #define D_ENERGY_TODAY "Energy Today"
 #define D_ENERGY_YESTERDAY "Energy Yesterday"
@@ -705,8 +699,6 @@
 #define D_SENSOR_SDM630_RX     "SDM630 Rx"
 #define D_SENSOR_WE517_TX      "WE517 Tx"
 #define D_SENSOR_WE517_RX      "WE517 Rx"
-#define D_SENSOR_LD2410_TX     "LD2410 Tx"
-#define D_SENSOR_LD2410_RX     "LD2410 Rx"
 #define D_GPIO_TM1621_CS       "TM1621 CS"
 #define D_GPIO_TM1621_WR       "TM1621 WR"
 #define D_GPIO_TM1621_RD       "TM1621 RD"
@@ -776,7 +768,6 @@
 #define D_SENSOR_ADE7880_IRQ   "ADE7880 IRQ"
 #define D_SENSOR_ADE7953_IRQ   "ADE7953 IRQ"
 #define D_SENSOR_ADE7953_RST   "ADE7953 RST"
-#define D_SENSOR_ADE7953_CS    "ADE7953 CS"
 #define D_SENSOR_BUZZER        "Buzzer"
 #define D_SENSOR_DISP_RESET    "Display Rst"
 #define D_SENSOR_ZIGBEE_TXD    "Zigbee Tx"
@@ -805,8 +796,6 @@
 #define D_SENSOR_SM2135_DAT    "SM2135 Dat"
 #define D_SENSOR_SM2335_CLK    "SM2335 Clk"
 #define D_SENSOR_SM2335_DAT    "SM2335 Dat"
-#define D_SENSOR_BP1658CJ_CLK  "BP1658CJ Clk"
-#define D_SENSOR_BP1658CJ_DAT  "BP1658CJ Dat"
 #define D_SENSOR_BP5758D_CLK    "BP5758D Clk"
 #define D_SENSOR_BP5758D_DAT    "BP5758D Dat"
 #define D_SENSOR_DEEPSLEEP     "DeepSleep"
@@ -905,11 +894,6 @@
 #define D_GPIO_SHIFT595_RCLK   "74x595 RCLK"
 #define D_GPIO_SHIFT595_OE     "74x595 OE"
 #define D_GPIO_SHIFT595_SER    "74x595 SER"
-#define D_GPIO_DINGTIAN_CLK    "Dingtian CLK"
-#define D_GPIO_DINGTIAN_SDI    "Dingtian SDI"
-#define D_GPIO_DINGTIAN_Q7     "Dingtian Q7"
-#define D_GPIO_DINGTIAN_PL     "Dingtian PL"
-#define D_GPIO_DINGTIAN_RCK    "Dingtian RCK"
 #define D_SENSOR_CM11_TX       "CM110x TX"
 #define D_SENSOR_CM11_RX       "CM110x RX"
 #define D_SENSOR_FLOWRATEMETER "Flowrate"

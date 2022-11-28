@@ -361,7 +361,11 @@ void RtcChipTimeSynced(void) {
   if ((Rtc.utc_time > START_VALID_TIME) &&                        // Valid UTC time
       (abs((int32_t)(Rtc.utc_time - RtcChip.ReadTime())) > 2)) {  // Time has drifted from RTC more than 2 seconds
     RtcChip.SetTime(Rtc.utc_time);                                // Update time
-    AddLog(LOG_LEVEL_DEBUG, PSTR("RTC: %s re-synced (" D_UTC_TIME ") %s"), RtcChip.name, GetDateAndTime(DT_UTC).c_str());
+//    AddLog(LOG_LEVEL_DEBUG, PSTR("RTC: %s re-synced (" D_UTC_TIME ") %s"), RtcChip.name, GetDateAndTime(DT_UTC).c_str());
+// MG
+//    AddLog(LOG_LEVEL_INFO, PSTR("RTC: %s re-synced (" D_UTC_TIME ") %s"), RtcChip.name, GetDateAndTime(DT_UTC).c_str());
+    AddLog(LOG_LEVEL_INFO, PSTR("RTC: " D_RTC_SET " %s (" D_UTC_TIME ") %s"), RtcChip.name, GetDateAndTime(DT_UTC).c_str());
+
   }
 }
 
@@ -432,7 +436,7 @@ void CmndRtcNtpServer(void) {
  * Interface
 \*********************************************************************************************/
 
-bool Xdrv56(uint32_t function) {
+bool Xdrv56(uint8_t function) {
   bool result = false;
 
 #ifdef RTC_NTP_SERVER

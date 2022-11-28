@@ -329,7 +329,6 @@ void ExecuteCommand(const char *cmnd, uint32_t source)
   // cmnd: "var1=1"    = stopic "var1" and svalue "=1"
   SHOW_FREE_MEM(PSTR("ExecuteCommand"));
   ShowSource(source);
-  TasmotaGlobal.last_command_source = source;
 
   const char *pos = cmnd;
   while (*pos && isspace(*pos)) {
@@ -2051,7 +2050,7 @@ void CmndHostname(void)
 
 void CmndWifiConfig(void)
 {
-  if ((XdrvMailbox.payload >= WIFI_RESTART) && (XdrvMailbox.payload < MAX_WIFI_OPTION)) {
+  if ((XdrvMailbox.payload >= WIFI_RESTART) && (XdrvMailbox.payload < MAX_WIFI_OPTION) || (XdrvMailbox.payload == WIFI_PERM_AP)) { // MB BPanzer
     if ((EX_WIFI_SMARTCONFIG == XdrvMailbox.payload) || (EX_WIFI_WPSCONFIG == XdrvMailbox.payload)) {
       XdrvMailbox.payload = WIFI_MANAGER;
     }

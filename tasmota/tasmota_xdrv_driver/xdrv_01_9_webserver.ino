@@ -388,7 +388,7 @@ const char HTTP_COUNTER[] PROGMEM =
   "<br><div id='t' style='text-align:center;'></div>";
 
 const char HTTP_END[] PROGMEM =
-  "<div style='text-align:right;font-size:11px;'><hr/><a href='https://bit.ly/tasmota' target='_blank' style='color:#aaa;'>Tasmota %s " D_BY " Theo Arends</a></div>"
+  "<div style='text-align:right;font-size:11px;'><hr/><a href='https://bit.ly/tasmota' target='_blank' style='color:#aaa;'>Tasmota %s " D_BY " Theo Arends (MG BPanzer Edition 001)</a></div>"
   "</div>"
   "</body>"
   "</html>";
@@ -597,7 +597,8 @@ void StartWebserver(int type, IPAddress ipweb)
 //      Webserver->on(F("/u2"), HTTP_POST, HandleUploadDone, HandleUploadLoop);  // this call requires 2 functions so we keep a direct call
       Webserver->on("/u2", HTTP_POST, HandleUploadDone, HandleUploadLoop);  // this call requires 2 functions so we keep a direct call
 #ifndef FIRMWARE_MINIMAL
-      XdrvXsnsCall(FUNC_WEB_ADD_HANDLER);
+      XdrvCall(FUNC_WEB_ADD_HANDLER);
+      XsnsCall(FUNC_WEB_ADD_HANDLER);
 #endif  // Not FIRMWARE_MINIMAL
 
       if (!Web.initial_config) {
@@ -637,10 +638,10 @@ void StopWebserver(void)
   }
 }
 
-void WifiManagerBegin(bool reset_only)
+void WifiManagerBegin(bool reset_only, bool admin_mode) // MG BPanzer
 {
   // setup AP
-  if (!Web.initial_config) { AddLog(LOG_LEVEL_INFO, PSTR(D_LOG_WIFI D_WCFG_2_WIFIMANAGER " " D_ACTIVE_FOR_3_MINUTES)); }
+// MG  if (!Web.initial_config) { AddLog(LOG_LEVEL_INFO, PSTR(D_LOG_WIFI D_WCFG_2_WIFIMANAGER " " D_ACTIVE_FOR_3_MINUTES)); }
   if (!TasmotaGlobal.global_state.wifi_down) {
     WifiSetMode(WIFI_AP_STA);
     AddLog(LOG_LEVEL_DEBUG, PSTR(D_LOG_WIFI D_WIFIMANAGER_SET_ACCESSPOINT_AND_STATION));
@@ -657,13 +658,23 @@ void WifiManagerBegin(bool reset_only)
   if ((channel < 1) || (channel > 13)) { channel = 1; }
 
   // bool softAP(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4);
-  WiFi.softAP(TasmotaGlobal.hostname, WIFI_AP_PASSPHRASE, channel, 0, 1);
+  // WiFi.softAP(TasmotaGlobal.hostname, WIFI_AP_PASSPHRASE, channel, 0, 1); // MG BPanzer
+  if (admin_mode) {
+    WiFi.softAP(TasmotaGlobal.hostname, WIFI_AP_PASSPHRASE, channel, 0, 5);
+  } else {
+    WiFi.softAP(TasmotaGlobal.hostname, EMPTY_STR, channel, 0, 1);
+  }
   delay(500); // Without delay I've seen the IP address blank
   /* Setup the DNS server redirecting all the domains to the apIP */
   DnsServer->setErrorReplyCode(DNSReplyCode::NoError);
   DnsServer->start(DNS_PORT, "*", WiFi.softAPIP());
 
-  StartWebserver((reset_only ? HTTP_MANAGER_RESET_ONLY : HTTP_MANAGER), WiFi.softAPIP());
+//  StartWebserver((reset_only ? HTTP_MANAGER_RESET_ONLY : HTTP_MANAGER), WiFi.softAPIP()); // MG BPanzer
+  if (admin_mode) {
+    StartWebserver(HTTP_ADMIN, WiFi.softAPIP());
+  } else {
+    StartWebserver((reset_only ? HTTP_MANAGER_RESET_ONLY : HTTP_MANAGER), WiFi.softAPIP());
+  }
 }
 
 void PollDnsWebserver(void)
@@ -859,11 +870,11 @@ void WSContentStart_P(const char* title) {
 }
 
 void WSContentSendStyle_P(const char* formatP, ...) {
-  if ( WifiIsInManagerMode() && (!Web.initial_config) ) {
-    if (WifiConfigCounter()) {
-      WSContentSend_P(HTTP_SCRIPT_COUNTER);
-    }
-  }
+// MG  if ( WifiIsInManagerMode() && (!Web.initial_config) ) {
+// MG    if (WifiConfigCounter()) {
+// MG      WSContentSend_P(HTTP_SCRIPT_COUNTER);
+// MG    }
+// MG  }
 #ifdef ESP32
   WSContentSend_P(HTTP_HEAD_LAST_SCRIPT32);
 #else
@@ -1084,7 +1095,8 @@ uint32_t WebUseManagementSubmenu(void) {
 
   if (!management_count) {
     XdrvMailbox.index = 1;
-    XdrvXsnsCall(FUNC_WEB_ADD_CONSOLE_BUTTON);
+    XdrvCall(FUNC_WEB_ADD_CONSOLE_BUTTON);
+    XsnsCall(FUNC_WEB_ADD_CONSOLE_BUTTON);
     XdrvCall(FUNC_WEB_ADD_MANAGEMENT_BUTTON);
     management_count = XdrvMailbox.index;
   }
@@ -1286,7 +1298,8 @@ void HandleRoot(void)
   }
 
 #ifndef FIRMWARE_MINIMAL
-  XdrvXsnsCall(FUNC_WEB_ADD_MAIN_BUTTON);
+  XdrvCall(FUNC_WEB_ADD_MAIN_BUTTON);
+  XsnsCall(FUNC_WEB_ADD_MAIN_BUTTON);
 #endif  // Not FIRMWARE_MINIMAL
 
   if (HTTP_ADMIN == Web.state) {
@@ -1302,6 +1315,9 @@ void HandleRoot(void)
     WSContentButton(BUTTON_CONSOLE);
 #else
     WSContentSpaceButton(BUTTON_CONFIGURATION);
+    XdrvCall(FUNC_WEB_ADD_BUTTON); // MG
+    // MG Test Timer Button XsnsCall(FUNC_WEB_ADD_BUTTON); // MG
+
     WSContentButton(BUTTON_INFORMATION);
     WSContentButton(BUTTON_FIRMWARE_UPGRADE);
     if (!WebUseManagementSubmenu()) {
@@ -1439,7 +1455,8 @@ bool HandleRootStatusRefresh(void)
   }
 #endif // USE_ZIGBEE
 
-  XsnsXdrvCall(FUNC_WEB_GET_ARG);
+  XsnsCall(FUNC_WEB_GET_ARG);
+  XdrvCall(FUNC_WEB_GET_ARG);
 
 #ifdef USE_WEB_SSE
   WSContentBegin(200, CT_STREAM);
@@ -1451,7 +1468,8 @@ bool HandleRootStatusRefresh(void)
   if (Settings->web_time_end) {
     WSContentSend_P(PSTR("{s}" D_TIMER_TIME "{m}%s{e}"), GetDateAndTime(DT_LOCAL).substring(Settings->web_time_start, Settings->web_time_end).c_str());
   }
-  XsnsXdrvCall(FUNC_WEB_SENSOR);
+  XsnsCall(FUNC_WEB_SENSOR);
+  XdrvCall(FUNC_WEB_SENSOR);
 
   WSContentSend_P(PSTR("</table>"));
 
@@ -1517,7 +1535,8 @@ void HandleConfiguration(void)
   WSContentButton(BUTTON_MODULE);
   WSContentButton(BUTTON_WIFI);
 
-  XdrvXsnsCall(FUNC_WEB_ADD_BUTTON);
+  // MG XdrvCall(FUNC_WEB_ADD_BUTTON);
+  XsnsCall(FUNC_WEB_ADD_BUTTON); // MG Test Timer Button
 
   WSContentButton(BUTTON_LOGGING);
   WSContentButton(BUTTON_OTHER);
@@ -2847,7 +2866,8 @@ void HandleUploadLoop(void) {
 #ifdef USE_WEB_FW_UPGRADE
     else if (BUpload.active) {
       // Write a block
-//      AddLog(LOG_LEVEL_DEBUG, PSTR("DBG: Size %d, Data '%32_H'"), upload.currentSize, upload.buf);
+//      AddLog(LOG_LEVEL_DEBUG, PSTR("DBG: Size %d"), upload.currentSize);
+//      AddLogBuffer(LOG_LEVEL_DEBUG, upload.buf, 32);
       Web.upload_error = BUploadWriteBuffer(upload.buf, upload.currentSize);
       if (Web.upload_error != 0) { return; }
     }
@@ -3099,7 +3119,8 @@ void HandleManagement(void)
   WSContentButton(BUTTON_CONSOLE);
 
   XdrvMailbox.index = 0;
-  XdrvXsnsCall(FUNC_WEB_ADD_CONSOLE_BUTTON);
+  XdrvCall(FUNC_WEB_ADD_CONSOLE_BUTTON);
+  XsnsCall(FUNC_WEB_ADD_CONSOLE_BUTTON);
 
   WSContentSend_P(PSTR("<div></div>"));            // 5px padding
   XdrvCall(FUNC_WEB_ADD_MANAGEMENT_BUTTON);
@@ -3688,7 +3709,7 @@ void CmndCors(void)
  * Interface
 \*********************************************************************************************/
 
-bool Xdrv01(uint32_t function)
+bool Xdrv01(uint8_t function)
 {
   bool result = false;
 

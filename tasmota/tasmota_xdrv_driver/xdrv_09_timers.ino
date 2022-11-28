@@ -253,10 +253,10 @@ uint16_t TimerGetTimeOfDay(uint8_t index)
   int16_t xtime = xtimer.time;
 #ifdef USE_SUNRISE
   if (xtimer.mode) {
-    ApplyTimerOffsets(&xtimer);
-    xtime = xtimer.time;
-    if (xtime==2047 && xtimer.mode==1) xtime *= -1; // Sun always has already rises
-    if (xtime==2046 && xtimer.mode==2) xtime *= -1; // Sun always has already set   
+  if (xtime >= 12*60) xtime = 12*60 - xtime;
+  xtime += (int16_t)SunMinutes(xtimer.mode-1);
+  if (xtime <      0) xtime += 24*60;
+  if (xtime >= 24*60) xtime -= 24*60;
   }
 #endif
 return xtime;
@@ -914,7 +914,8 @@ void HandleTimerConfiguration(void)
   WSContentSend_P(HTTP_FORM_TIMER4);
 #endif //USE_UNISHOX_COMPRESSION
   WSContentSend_P(HTTP_FORM_END);
-  WSContentSpaceButton(BUTTON_CONFIGURATION);
+  // MG WSContentSpaceButton(BUTTON_CONFIGURATION);
+  WSContentSpaceButton(BUTTON_MAIN); // MG
   WSContentStop();
 }
 
@@ -946,7 +947,7 @@ void TimerSaveSettings(void)
  * Interface
 \*********************************************************************************************/
 
-bool Xdrv09(uint32_t function)
+bool Xdrv09(uint8_t function)
 {
   bool result = false;
 

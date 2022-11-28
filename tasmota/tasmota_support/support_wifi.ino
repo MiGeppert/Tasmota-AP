@@ -109,9 +109,12 @@ void WifiConfig(uint8_t type)
     }
 #endif  // USE_WEBSERVER
 
-    Wifi.config_counter = WIFI_CONFIG_SEC;   // Allow up to WIFI_CONFIG_SECS seconds for phone to provide ssid/pswd
-    Wifi.counter = Wifi.config_counter +5;
-    TasmotaGlobal.blinks = 255;
+    if (WIFI_PERM_AP != type) { // MG BPanzer
+      Wifi.config_counter = WIFI_CONFIG_SEC;   // Allow up to WIFI_CONFIG_SECS seconds for phone to provide ssid/pswd
+      Wifi.counter = Wifi.config_counter +5;
+      TasmotaGlobal.blinks = 255;
+    } // MG BPanzer
+
     if (WIFI_RESTART == Wifi.config_type) {
       TasmotaGlobal.restart_flag = 2;
     }
@@ -119,8 +122,12 @@ void WifiConfig(uint8_t type)
       AddLog(LOG_LEVEL_INFO, PSTR(D_LOG_WIFI D_WCFG_6_SERIAL " " D_ACTIVE_FOR_3_MINUTES));
     }
 #ifdef USE_WEBSERVER
+    else if (WIFI_PERM_AP == type) { // MG BPanzer
+      WifiManagerBegin(false, true);
+      return;
+    }
     else if (WIFI_MANAGER == Wifi.config_type || WIFI_MANAGER_RESET_ONLY == Wifi.config_type) {
-      WifiManagerBegin(WIFI_MANAGER_RESET_ONLY == Wifi.config_type);
+      WifiManagerBegin(WIFI_MANAGER_RESET_ONLY == Wifi.config_type, false); // MG BPanzer
     }
 #endif  // USE_WEBSERVER
   }
@@ -203,25 +210,17 @@ void WiFiSetSleepMode(void)
   WifiSetOutputPower();
 }
 
-void WifiBegin(uint8_t flag, uint8_t channel) {
+void WifiBegin(uint8_t flag, uint8_t channel)
+{
 #ifdef USE_EMULATION
   UdpDisconnect();
 #endif  // USE_EMULATION
 
   WiFi.persistent(false);   // Solve possible wifi init errors (re-add at 6.2.1.16 #4044, #4083)
-
-#ifdef USE_WIFI_RANGE_EXTENDER
-  if (WiFi.getMode() != WIFI_AP_STA || !RgxApUp()) {  // Preserve range extender connections (#17103)
-    WiFi.disconnect(true);  // Delete SDK wifi config
-    delay(200);
-    WifiSetMode(WIFI_STA);  // Disable AP mode
-  }
-#else
   WiFi.disconnect(true);    // Delete SDK wifi config
   delay(200);
-  WifiSetMode(WIFI_STA);    // Disable AP mode
-#endif
 
+  WifiSetMode(WIFI_STA);    // Disable AP mode
   WiFiSetSleepMode();
 //  if (WiFi.getPhyMode() != WIFI_PHY_MODE_11N) { WiFi.setPhyMode(WIFI_PHY_MODE_11N); }  // B/G/N
 //  if (WiFi.getPhyMode() != WIFI_PHY_MODE_11G) { WiFi.setPhyMode(WIFI_PHY_MODE_11G); }  // B/G
@@ -587,15 +586,18 @@ void WifiCheckIp(void) {
 
 void WifiCheck(uint8_t param)
 {
-  Wifi.counter--;
+  if (WIFI_PERM_AP != Wifi.config_type) { // not for WIFI_PERM_AP , MG BPanzer
+    Wifi.counter--;
+  }
   switch (param) {
   case WIFI_SERIAL:
   case WIFI_MANAGER:
+  case WIFI_PERM_AP: // MG BPanzer
     WifiConfig(param);
     break;
   default:
     if (Wifi.config_counter) {
-      Wifi.config_counter--;
+//      Wifi.config_counter--;
       Wifi.counter = Wifi.config_counter +5;
       if (Wifi.config_counter) {
         if (!Wifi.config_counter) {
@@ -886,15 +888,13 @@ void WifiPollNtp() {
 
     AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("NTP: Sync time..."));
     ntp_run_time = millis();
-    uint64_t ntp_nanos = WifiGetNtp();
-    uint32_t ntp_time = ntp_nanos / 1000000000;
+    uint32_t ntp_time = WifiGetNtp();
     ntp_run_time = (millis() - ntp_run_time) / 1000;
 //    AddLog(LOG_LEVEL_DEBUG, PSTR("NTP: Runtime %d"), ntp_run_time);
     if (ntp_run_time < 5) { ntp_run_time = 0; }  // DNS timeout is around 10s
 
     if (ntp_time > START_VALID_TIME) {
       Rtc.utc_time = ntp_time;
-      Rtc.nanos = ntp_nanos % 1000000000;
       ntp_sync_minute = 60;             // Sync so block further requests
       RtcSync("NTP");
     } else {
@@ -903,7 +903,7 @@ void WifiPollNtp() {
   }
 }
 
-uint64_t WifiGetNtp(void) {
+uint32_t WifiGetNtp(void) {
   static uint8_t ntp_server_id = 0;
 
 //  AddLog(LOG_LEVEL_DEBUG, PSTR("NTP: Start NTP Sync %d ..."), ntp_server_id);
@@ -993,12 +993,7 @@ uint64_t WifiGetNtp(void) {
         ntp_server_id++;                            // Next server next time
         return 0;
       }
-      uint32_t tmp_fraction = (uint32_t)packet_buffer[44] << 24;
-      tmp_fraction |= (uint32_t)packet_buffer[45] << 16;
-      tmp_fraction |= (uint32_t)packet_buffer[46] << 8;
-      tmp_fraction |= (uint32_t)packet_buffer[47];
-      uint32_t fraction = (((uint64_t)tmp_fraction) * 1000000000) >> 32;
-      return (((uint64_t)secs_since_1900) - 2208988800UL) * 1000000000 + fraction;
+      return secs_since_1900 - 2208988800UL;
     }
     delay(10);
   }
